@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Header } from '../components/header'
 
 
 
@@ -8,8 +9,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`antialiased`}
     >
-
-        <h1>HEADER DA PÁGINA</h1>
+        <Header/>
+       
 
       {children}
       <body className="min-h-full flex flex-col">{children}</body>
