@@ -1,12 +1,23 @@
+interface EstabelecimentosProps {
+  id: number;
+  title: string;
+  body: string;
+  userId: number;
+}
 
-export default async function EstabelecimentosPage(){
+interface ResponseProps {
+  estabelecimentos: EstabelecimentosProps[];
+}
 
-    const response = await fetch(``)
+export default async function EstabelecimentosPage() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const data: EstabelecimentosProps[] = await response.json();
 
+  console.log(data);
 
-    return (
-        <div>
-            <h1>Todos os Estabelecimentos encontrados</h1>
-        </div>
-    )
+  return (
+    <div className="flex flex-col gap-4">
+      <h1>Todos os Estabelecimentos encontrados</h1>
+    </div>
+  );
 }
