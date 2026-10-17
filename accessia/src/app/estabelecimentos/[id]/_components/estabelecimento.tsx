@@ -1,17 +1,44 @@
-import { resolve } from "path"
-import { EstabelecimentoProps } from "../../page"
 
-export async function EstabelecimentoInfo(){
+interface EstabelecimentoProps {
+    id: number;
+    nome: string;
+    cidade: string;
+    categoria: string;
+}
 
-    await new Promise(resolve => setTimeout(resolve, 4000))
+interface EstabelecimentoInfoProps {
+    id: string;
+}
 
-    const response = await fetch(`https://dumyjson.com/estabelecimentos/${id}`)
-    const data: EstabelecimentoProps = await response.json()
+export async function EstabelecimentoInfo({
+    id,
+}: EstabelecimentoInfoProps) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    return(
+    const response = await fetch(
+        "http://localhost:3000/api/estabelecimentos"
+    );
+
+    if (!response.ok) {
+        throw new Error("Não foi possível carregar os estabelecimentos.");
+    }
+
+    const estabelecimentos: EstabelecimentoProps[] =
+        await response.json();
+
+    const data = estabelecimentos.find(
+        (estabelecimento) => estabelecimento.id === Number(id)
+    );
+
+    if (!data) {
+        return <p>Estabelecimento não encontrado.</p>;
+    }
+
+    return (
         <div>
-            <h2>{data.title}</h2>
-            <p>{data.body}</p>
+            <h2>{data.nome}</h2>
+            <p>{data.cidade}</p>
+            <p>{data.categoria}</p>
         </div>
-    )
+    );
 }
