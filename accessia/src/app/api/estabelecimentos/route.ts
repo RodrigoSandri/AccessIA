@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2";
@@ -14,27 +15,8 @@ interface Estabelecimento extends RowDataPacket {
     vaga_reservada: string;
 }
 
-interface RouteContext {
-    params: Promise<{
-        id: string;
-    }>;
-}
-
-export async function GET(
-    _request: Request,
-    { params }: RouteContext
-) {
+export async function GET() {
     try {
-        const { id } = await params;
-        const idNumerico = Number(id);
-
-        if (!Number.isSafeInteger(idNumerico) || idNumerico <= 0) {
-            return NextResponse.json(
-                { erro: "ID de estabelecimento inválido." },
-                { status: 400 }
-            );
-        }
-
         const [estabelecimentos] = await pool.execute<Estabelecimento[]>(
             `SELECT
                 id,
@@ -47,23 +29,15 @@ export async function GET(
                 banheiro_adaptado,
                 vaga_reservada
             FROM estabelecimentos
-            WHERE id = ?`,
-            [idNumerico]
+            ORDER BY id ASC`
         );
 
-        if (estabelecimentos.length === 0) {
-            return NextResponse.json(
-                { erro: "Estabelecimento não encontrado." },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(estabelecimentos[0]);
+        return NextResponse.json(estabelecimentos);
     } catch (error) {
-        console.error("Erro ao buscar estabelecimento:", error);
+        console.error("Erro ao listar estabelecimentos:", error);
 
         return NextResponse.json(
-            { erro: "Não foi possível consultar o estabelecimento." },
+            { erro: "Não foi possível listar os estabelecimentos." },
             { status: 500 }
         );
     }

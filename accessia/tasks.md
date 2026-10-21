@@ -11,10 +11,14 @@ Entregar uma versão funcional do AccessIA para consultar estabelecimentos e vis
 - [x] Conexão com MySQL configurada por variáveis de ambiente.
 - [x] API de estabelecimentos integrada ao MySQL.
 - [x] Rota `/api/estabelecimentos` respondendo com HTTP 200.
-- [ ] Conferir as colunas da tabela `estabelecimentos`.
-- [ ] Inserir estabelecimentos de teste no banco.
-- [ ] Confirmar que a API retorna os registros cadastrados.
-- [ ] Tratar erros de consulta e conexão com o banco.
+- [x] Consulta SQL da API com as colunas de estabelecimentos necessárias.
+- [x] Inserir estabelecimentos de teste no banco.
+- [x] Confirmar que a API retorna os registros cadastrados.
+- [x] Implementar tratamento de erros nas rotas de listagem e consulta por ID.
+- [x] Implementar a rota `/api/estabelecimentos/[id]`.
+- [x] Validar IDs inválidos com resposta HTTP 400.
+- [ ] Testar o retorno HTTP 404 para estabelecimentos inexistentes.
+- [ ] Testar o comportamento quando o banco de dados estiver indisponível.
 
 ## 2. Páginas de estabelecimentos
 
@@ -28,7 +32,7 @@ Entregar uma versão funcional do AccessIA para consultar estabelecimentos e vis
 
 ## 3. Qualidade e segurança
 
-- [ ] Remover logs temporários de diagnóstico.
+- [ ] Revisar e remover logs temporários de diagnóstico.
 - [ ] Confirmar que as credenciais estão no `.env.local`.
 - [ ] Confirmar que `.env.local` não está sendo enviado ao GitHub.
 - [ ] Executar `npm run lint`.
