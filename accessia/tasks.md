@@ -17,7 +17,7 @@ Entregar uma versão funcional do AccessIA para consultar estabelecimentos e vis
 - [x] Implementar tratamento de erros nas rotas de listagem e consulta por ID.
 - [x] Implementar a rota `/api/estabelecimentos/[id]`.
 - [x] Validar IDs inválidos com resposta HTTP 400.
-- [ ] Testar o retorno HTTP 404 para estabelecimentos inexistentes.
+- [x] Testar o retorno HTTP 404 para estabelecimentos inexistentes.
 - [ ] Testar o comportamento quando o banco de dados estiver indisponível.
 
 ## 2. Páginas de estabelecimentos

@@ -1,57 +1,82 @@
 
 import Link from "next/link";
+import { pool } from "@/lib/db";
+import type { RowDataPacket } from "mysql2";
 
-interface EstabelecimentosProps {
+interface Estabelecimento extends RowDataPacket {
   id: number;
   nome: string;
   cidade: string;
   categoria: string;
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function EstabelecimentosPage() {
-  const response = await fetch(
-    "http://localhost:3000/api/estabelecimentos"
+  const [estabelecimentos] = await pool.execute<Estabelecimento[]>(
+    `SELECT id, nome, cidade, categoria
+     FROM estabelecimentos
+     ORDER BY id ASC`
   );
 
-  if (!response.ok) {
-    throw new Error("Erro ao carregar estabelecimentos");
-  }
-
-  const data: EstabelecimentosProps[] = await response.json();
-
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="mb-6 mt-5 text-center text-3xl font-bold text-zinc-900">
-        Todos os Estabelecimentos encontrados
-      </h1>
+    <main className="mx-auto w-full max-w-7xl px-4 py-8">
+      <header className="mb-8">
+        <h1 className="text-center text-3xl font-bold text-zinc-900">
+          Estabelecimentos acessíveis
+        </h1>
 
-      <div className="flex flex-col gap-4">
-        {data.map((estabelecimento) => (
-          <div
-            key={estabelecimento.id}
-            className="rounded-lg bg-zinc-200 p-4 shadow-sm transition hover:bg-zinc-300"
-          >
-            <h2 className="mb-2 text-lg font-bold text-zinc-900">
+        <p className="mt-3 text-center text-zinc-600">
+          Consulte as informações de acessibilidade dos estabelecimentos.
+        </p>
+      </header>
+
+      {estabelecimentos.length === 0 ? (
+        <section className="rounded-xl border border-zinc-200 bg-white px-6 py-10 text-center">
+          <h2 className="text-xl font-semibold text-zinc-900">
+            Nenhum estabelecimento encontrado
+          </h2>
+
+          <p className="mt-2 text-zinc-600">
+            Ainda não há estabelecimentos cadastrados.
+          </p>
+        </section>
+      ) : (
+        <section
+          aria-label="Lista de estabelecimentos"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {estabelecimentos.map((estabelecimento) => (
+            <article
+              key={estabelecimento.id}
+              className="flex flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+            >
+              <h2 className="text-xl font-bold text-zinc-900">
+                {estabelecimento.nome}
+              </h2>
+
+              <div className="mt-3 space-y-2 text-sm text-zinc-700">
+                <p>
+                  <span className="font-semibold">Cidade:</span>{" "}
+                  {estabelecimento.cidade}
+                </p>
+
+                <p>
+                  <span className="font-semibold">Categoria:</span>{" "}
+                  {estabelecimento.categoria}
+                </p>
+              </div>
+
               <Link
                 href={`/estabelecimentos/${estabelecimento.id}`}
-                className="hover:underline"
+                className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 font-semibold text-white hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
               >
-                {estabelecimento.nome}
+                Ver detalhes
               </Link>
-            </h2>
-
-            <p className="text-sm text-zinc-700">
-              <span className="font-semibold">Cidade:</span>{" "}
-              {estabelecimento.cidade}
-            </p>
-
-            <p className="text-sm text-zinc-700">
-              <span className="font-semibold">Categoria:</span>{" "}
-              {estabelecimento.categoria}
-            </p>
-          </div>
-        ))}
-      </div>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }
