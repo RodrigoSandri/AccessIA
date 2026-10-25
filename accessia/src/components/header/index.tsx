@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 
 export function Header() {
@@ -17,6 +18,12 @@ export function Header() {
                         <li>
                             <Link href="/estabelecimentos">
                                 Estabelecimentos
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link href="/contribuir">
+                                Contribuir
                             </Link>
                         </li>
 
