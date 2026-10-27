@@ -13,7 +13,7 @@ export async function GET() {
             "SELECT COUNT(*) AS total FROM estabelecimentos"
         );
 
-        const [contribuicoes] = await pool.execute<TotalRow[]>(
+         const [contribuicoes] = await pool.execute<TotalRow[]>(
             "SELECT COUNT(*) AS total FROM contribuicoes"
         );
 

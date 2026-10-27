@@ -306,7 +306,7 @@ export default function ContribuirPage() {
                                 ? "border-red-300 bg-red-50 text-red-800"
                                 : "border-green-300 bg-green-50 text-green-800"
                         }`}
-                    >
+                    >   
                         {mensagem}
                     </div>
                 )}
