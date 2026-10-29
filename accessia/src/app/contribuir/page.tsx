@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 
 interface Estabelecimento {
     id: number;
@@ -115,12 +116,12 @@ export default function ContribuirPage() {
 
     return (
         <main className="mx-auto max-w-2xl px-6 py-12">
-            <a
-                href="/estabelecimentos"
-                className="text-sm text-blue-700 hover:underline"
-            >
-                ← Voltar aos estabelecimentos
-            </a>
+        <Link
+            href="/estabelecimentos"
+            className="text-sm text-blue-700 hover:underline"
+    >
+            ← Voltar aos estabelecimentos
+    </Link>
 
             <h1 className="mt-5 text-3xl font-bold">
                 Contribua com o AccessIA
