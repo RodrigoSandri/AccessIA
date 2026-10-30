@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface DadosDashboard {
     estabelecimentos: number;
@@ -10,8 +11,12 @@ interface DadosDashboard {
 }
 
 export default function Dashboard() {
+    const router = useRouter();
+
     const [dados, setDados] = useState<DadosDashboard | null>(null);
     const [erro, setErro] = useState(false);
+    const [saindo, setSaindo] = useState(false);
+    const [erroLogout, setErroLogout] = useState("");
 
     useEffect(() => {
         async function carregarDados() {
@@ -33,6 +38,27 @@ export default function Dashboard() {
 
         carregarDados();
     }, []);
+
+    async function sair() {
+        setSaindo(true);
+        setErroLogout("");
+
+        try {
+            const resposta = await fetch("/api/auth", {
+                method: "DELETE",
+            });
+
+            if (!resposta.ok) {
+                throw new Error("Não foi possível encerrar a sessão.");
+            }
+
+            router.replace("/login");
+            router.refresh();
+        } catch {
+            setErroLogout("Não foi possível sair. Tente novamente.");
+            setSaindo(false);
+        }
+    }
 
     const cards = [
         {
@@ -60,14 +86,34 @@ export default function Dashboard() {
 
     return (
         <main className="mx-auto max-w-6xl px-6 py-10">
-            <header className="mb-10">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-                    Dashboard
-                </h1>
-                <p className="mt-2 text-gray-600">
-                    Visão geral da plataforma AccessIA
-                </p>
+            <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                        Dashboard
+                    </h1>
+                    <p className="mt-2 text-gray-600">
+                        Visão geral da plataforma AccessIA
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={sair}
+                    disabled={saindo}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gray-300 px-5 py-2 font-semibold text-gray-700 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {saindo ? "Saindo..." : "Sair"}
+                </button>
             </header>
+
+            {erroLogout && (
+                <p
+                    role="alert"
+                    className="mb-5 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800"
+                >
+                    {erroLogout}
+                </p>
+            )}
 
             <section aria-labelledby="resumo-titulo">
                 <h2

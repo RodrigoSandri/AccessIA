@@ -1,6 +1,7 @@
 
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
+import { isAdmin } from "@/lib/auth";
 import type { RowDataPacket } from "mysql2";
 
 interface TotalRow extends RowDataPacket {
@@ -8,12 +9,21 @@ interface TotalRow extends RowDataPacket {
 }
 
 export async function GET() {
+    const autenticado = await isAdmin();
+
+    if (!autenticado) {
+        return NextResponse.json(
+            { erro: "Acesso não autorizado." },
+            { status: 401 }
+        );
+    }
+
     try {
         const [estabelecimentos] = await pool.execute<TotalRow[]>(
             "SELECT COUNT(*) AS total FROM estabelecimentos"
         );
 
-         const [contribuicoes] = await pool.execute<TotalRow[]>(
+        const [contribuicoes] = await pool.execute<TotalRow[]>(
             "SELECT COUNT(*) AS total FROM contribuicoes"
         );
 
