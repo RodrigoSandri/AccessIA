@@ -9,7 +9,7 @@ const tiposDeAcessibilidade = [
     "vaga_reservada",
     "outro",
 ] as const;
-
+ 
 const opcoesDeInformacao = [
     "Sim",
     "Não",
