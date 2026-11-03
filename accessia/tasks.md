@@ -64,3 +64,35 @@ Entregar uma versão funcional do AccessIA para consultar estabelecimentos e vis
 - Não expor senhas ou credenciais.
 - Não executar alterações destrutivas no banco sem autorização.
 - Não realizar commits ou pushes sem autorização explícita.
+
+
+## 02/11/2026 — Desenvolvimento administrativo
+
+### Concluído
+- [x] Revisão do dashboard administrativo.
+- [x] Revisão das APIs de estabelecimentos.
+- [x] Criação da listagem administrativa de estabelecimentos.
+- [x] Implementação do formulário de cadastro de estabelecimentos.
+- [x] Implementação do formulário de edição de estabelecimentos.
+- [x] Integração da edição com a API PUT existente.
+
+## 03/11/2026 — Próximas atividades
+
+### Prioridade 1 — Gerenciamento de estabelecimentos
+- [ ] Implementar exclusão de estabelecimentos.
+- [ ] Conferir a integração da listagem, cadastro e edição.
+
+### Prioridade 2 — Avaliações e relatos
+- [ ] Revisar a estrutura atual de avaliações.
+- [ ] Implementar formulário de avaliação e relato.
+- [ ] Criar ou completar a API necessária.
+- [ ] Integrar as informações à página de detalhes.
+
+### Próximas funcionalidades
+- [ ] Implementar envio e armazenamento de fotos.
+- [ ] Implementar sistema de recompensas por participação.
+
+### Orientação
+- Priorizar implementação prática.
+- Evitar testes repetitivos.
+- Fazer verificações pontuais e deixar a revisão geral para o encerramento da V1.

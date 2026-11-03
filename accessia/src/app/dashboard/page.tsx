@@ -91,6 +91,7 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">
                         Dashboard
                     </h1>
+
                     <p className="mt-2 text-gray-600">
                         Visão geral da plataforma AccessIA
                     </p>
@@ -167,7 +168,39 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            <section className="mt-10 rounded-2xl border border-blue-100 bg-blue-50 p-6 sm:p-8">
+            <section
+                aria-labelledby="gestao-titulo"
+                className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+            >
+                <h2
+                    id="gestao-titulo"
+                    className="text-xl font-bold text-gray-900"
+                >
+                    Gestão administrativa
+                </h2>
+
+                <p className="mt-2 max-w-2xl leading-7 text-gray-600">
+                    Analise as informações enviadas pela comunidade e
+                    acompanhe as contribuições que aguardam moderação.
+                </p>
+
+                <div className="mt-5 flex flex-wrap items-center gap-4">
+                    <a
+                        href="/dashboard/contribuicoes"
+                        className="inline-flex min-h-12 items-center justify-center rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                    >
+                        Moderar contribuições
+                    </a>
+
+                    <span className="text-sm text-gray-600">
+                        {dados
+                            ? `${dados.pendentes} aguardando análise`
+                            : "Carregando pendências..."}
+                    </span>
+                </div>
+            </section>
+
+            <section className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-6 sm:p-8">
                 <h2 className="text-xl font-bold text-blue-950">
                     Ajude a tornar os lugares mais acessíveis
                 </h2>
