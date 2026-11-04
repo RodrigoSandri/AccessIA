@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,8 @@ export default function EstabelecimentosAdminPage() {
     const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
+    const [excluindoId, setExcluindoId] = useState<number | null>(null);
+    const [mensagem, setMensagem] = useState("");
 
     useEffect(() => {
         async function carregarEstabelecimentos() {
@@ -38,6 +41,51 @@ export default function EstabelecimentosAdminPage() {
         carregarEstabelecimentos();
     }, []);
 
+    async function excluirEstabelecimento(estabelecimento: Estabelecimento) {
+        const confirmar = window.confirm(
+            `Tem certeza de que deseja excluir "${estabelecimento.nome}"? Essa ação não poderá ser desfeita.`
+        );
+
+        if (!confirmar) {
+            return;
+        }
+
+        setErro("");
+        setMensagem("");
+        setExcluindoId(estabelecimento.id);
+
+        try {
+            const resposta = await fetch(
+                `/api/estabelecimentos/${estabelecimento.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.erro || "Não foi possível excluir o estabelecimento."
+                );
+            }
+
+            setEstabelecimentos((atuais) =>
+                atuais.filter((item) => item.id !== estabelecimento.id)
+            );
+
+            setMensagem(dados.mensagem || "Estabelecimento excluído com sucesso.");
+        } catch (error) {
+            setErro(
+                error instanceof Error
+                    ? error.message
+                    : "Não foi possível excluir o estabelecimento."
+            );
+        } finally {
+            setExcluindoId(null);
+        }
+    }
+
     return (
         <main className="mx-auto max-w-6xl px-6 py-10">
             <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -47,7 +95,7 @@ export default function EstabelecimentosAdminPage() {
                     </h1>
 
                     <p className="mt-2 text-gray-600">
-                        Cadastre, consulte e edite os estabelecimentos do AccessIA.
+                        Cadastre, consulte, edite e exclua os estabelecimentos do AccessIA.
                     </p>
                 </div>
 
@@ -89,6 +137,15 @@ export default function EstabelecimentosAdminPage() {
                     Estabelecimentos cadastrados
                 </h2>
 
+                {mensagem && (
+                    <p
+                        role="status"
+                        className="mb-4 rounded-lg border border-green-300 bg-green-50 p-4 text-green-800"
+                    >
+                        {mensagem}
+                    </p>
+                )}
+
                 {carregando && (
                     <p className="py-6 text-gray-600">
                         Carregando estabelecimentos...
@@ -98,7 +155,7 @@ export default function EstabelecimentosAdminPage() {
                 {erro && (
                     <p
                         role="alert"
-                        className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-800"
+                        className="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800"
                     >
                         {erro}
                     </p>
@@ -110,7 +167,7 @@ export default function EstabelecimentosAdminPage() {
                     </p>
                 )}
 
-                {!carregando && !erro && estabelecimentos.length > 0 && (
+                {!carregando && estabelecimentos.length > 0 && (
                     <div className="divide-y divide-gray-200">
                         {estabelecimentos.map((estabelecimento) => (
                             <article
@@ -131,12 +188,25 @@ export default function EstabelecimentosAdminPage() {
                                     </p>
                                 </div>
 
-                                <Link
-                                    href={`/dashboard/estabelecimentos/${estabelecimento.id}/editar`}
-                                    className="inline-flex min-h-10 items-center justify-center rounded-lg border border-blue-700 px-4 py-2 font-semibold text-blue-700 hover:bg-blue-50"
-                                >
-                                    Editar
-                                </Link>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Link
+                                        href={`/dashboard/estabelecimentos/${estabelecimento.id}/editar`}
+                                        className="inline-flex min-h-10 items-center justify-center rounded-lg border border-blue-700 px-4 py-2 font-semibold text-blue-700 hover:bg-blue-50"
+                                    >
+                                        Editar
+                                    </Link>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => excluirEstabelecimento(estabelecimento)}
+                                        disabled={excluindoId !== null}
+                                        className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-600 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {excluindoId === estabelecimento.id
+                                            ? "Excluindo..."
+                                            : "Excluir"}
+                                    </button>
+                                </div>
                             </article>
                         ))}
                     </div>

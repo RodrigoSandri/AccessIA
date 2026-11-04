@@ -251,3 +251,70 @@ export async function PUT(
         );
     }
 }
+
+// Exclui um estabelecimento existente.
+export async function DELETE(
+    request: Request,
+    { params }: RouteParams
+) {
+    try {
+        const autenticado = await isAdmin();
+
+        if (!autenticado) {
+            return NextResponse.json(
+                { erro: "Acesso não autorizado." },
+                { status: 401 }
+            );
+        }
+
+        const { id } = await params;
+        const estabelecimentoId = Number(id);
+
+        if (!Number.isInteger(estabelecimentoId) || estabelecimentoId <= 0) {
+            return NextResponse.json(
+                { erro: "ID inválido." },
+                { status: 400 }
+            );
+        }
+
+        const [resultadoBruto] = await pool.query(
+            `DELETE FROM estabelecimentos
+            WHERE id = ?`,
+            [estabelecimentoId]
+        );
+
+        const resultado = resultadoBruto as ResultSetHeader;
+
+        if (resultado.affectedRows === 0) {
+            return NextResponse.json(
+                { erro: "Estabelecimento não encontrado." },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            mensagem: "Estabelecimento excluído com sucesso.",
+        });
+    } catch (error) {
+        console.error("Erro ao excluir estabelecimento:", error);
+
+        if (
+            typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            error.code === "ER_ROW_IS_REFERENCED_2"
+        ) {
+            return NextResponse.json(
+                {
+                    erro: "Este estabelecimento possui contribuições vinculadas e não pode ser excluído.",
+                },
+                { status: 409 }
+            );
+        }
+
+        return NextResponse.json(
+            { erro: "Não foi possível excluir o estabelecimento." },
+            { status: 500 }
+        );
+    }
+}
