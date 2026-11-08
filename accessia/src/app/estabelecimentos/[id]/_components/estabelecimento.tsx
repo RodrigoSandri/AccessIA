@@ -1,6 +1,7 @@
 
 import { pool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2";
+import { Avaliacoes } from "./avaliacoes";
 
 interface EstabelecimentoProps extends RowDataPacket {
     id: number;
@@ -262,7 +263,10 @@ export async function EstabelecimentoInfo({
                     As informações apresentadas não representam,
                     por si só, uma certificação de acessibilidade.
                 </p>
-            </section>
+                        </section>
+
+            {/* Avaliações dos usuários */}
+            <Avaliacoes estabelecimentoId={idNumerico} />
 
         </section>
     );
