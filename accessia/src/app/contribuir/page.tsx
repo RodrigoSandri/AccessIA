@@ -17,6 +17,7 @@ export default function ContribuirPage() {
     const [informacao, setInformacao] = useState("");
     const [nome, setNome] = useState("");
     const [relato, setRelato] = useState("");
+    const [foto, setFoto] = useState<File | null>(null);
     const [mensagem, setMensagem] = useState("");
     const [erro, setErro] = useState(false);
     const [carregando, setCarregando] = useState(false);
@@ -66,18 +67,24 @@ export default function ContribuirPage() {
         setCarregando(true);
 
         try {
+            const formulario = new FormData();
+
+            formulario.append(
+                "estabelecimento_id",
+                String(Number(estabelecimentoId))
+            );
+            formulario.append("tipo_acessibilidade", tipo);
+            formulario.append("informacao_proposta", informacao);
+            formulario.append("nome_contribuidor", nome.trim());
+            formulario.append("relato", relato.trim());
+
+            if (foto) {
+                formulario.append("foto", foto);
+            }
+
             const resposta = await fetch("/api/contribuicoes", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    estabelecimento_id: Number(estabelecimentoId),
-                    tipo_acessibilidade: tipo,
-                    informacao_proposta: informacao,
-                    nome_contribuidor: nome.trim() || null,
-                    relato: relato.trim() || null,
-                }),
+                body: formulario,
             });
 
             const dados = await resposta.json();
@@ -100,6 +107,9 @@ export default function ContribuirPage() {
             setInformacao("");
             setNome("");
             setRelato("");
+            setFoto(null);
+
+            event.currentTarget.reset();
         } catch (error) {
             console.error("Erro ao enviar contribuição:", error);
 
@@ -116,12 +126,12 @@ export default function ContribuirPage() {
 
     return (
         <main className="mx-auto max-w-2xl px-6 py-12">
-        <Link
-            href="/estabelecimentos"
-            className="text-sm text-blue-700 hover:underline"
-    >
-            ← Voltar aos estabelecimentos
-    </Link>
+            <Link
+                href="/estabelecimentos"
+                className="text-sm text-blue-700 hover:underline"
+            >
+                ← Voltar aos estabelecimentos
+            </Link>
 
             <h1 className="mt-5 text-3xl font-bold">
                 Contribua com o AccessIA
@@ -228,9 +238,7 @@ export default function ContribuirPage() {
                                         value={opcao}
                                         checked={informacao === opcao}
                                         onChange={(event) =>
-                                            setInformacao(
-                                                event.target.value
-                                            )
+                                            setInformacao(event.target.value)
                                         }
                                         required
                                         className="h-4 w-4"
@@ -284,6 +292,29 @@ export default function ContribuirPage() {
                     </p>
                 </div>
 
+                <div>
+                    <label
+                        htmlFor="foto"
+                        className="mb-2 block font-medium"
+                    >
+                        Fotografia do estabelecimento (opcional)
+                    </label>
+
+                    <input
+                        id="foto"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(event) =>
+                            setFoto(event.target.files?.[0] || null)
+                        }
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3"
+                    />
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Envie uma fotografia em JPG, PNG ou WebP.
+                    </p>
+                </div>
+
                 <button
                     type="submit"
                     disabled={
@@ -307,7 +338,7 @@ export default function ContribuirPage() {
                                 ? "border-red-300 bg-red-50 text-red-800"
                                 : "border-green-300 bg-green-50 text-green-800"
                         }`}
-                    >   
+                    >
                         {mensagem}
                     </div>
                 )}
