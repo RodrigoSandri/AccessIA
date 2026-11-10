@@ -6,6 +6,8 @@ import type {
     ResultSetHeader,
     RowDataPacket,
 } from "mysql2";
+import { put, del } from "@vercel/blob";
+import { randomUUID } from "crypto";
 
 const tiposDeAcessibilidade = [
     "rampa_acesso",
@@ -89,30 +91,22 @@ export async function GET() {
 
 // Registra uma nova contribuição.
 export async function POST(request: Request) {
+    let fotoUrl: string | null = null;
+
     try {
-        const corpo: unknown = await request.json();
+        const formulario = await request.formData();
+
+        const estabelecimentoId = Number(
+            formulario.get("estabelecimento_id")
+        );
+
+        const tipo = formulario.get("tipo_acessibilidade");
+        const informacao = formulario.get("informacao_proposta");
+        const nome = formulario.get("nome_contribuidor");
+        const relato = formulario.get("relato");
+        const foto = formulario.get("foto");
 
         if (
-            typeof corpo !== "object" ||
-            corpo === null ||
-            Array.isArray(corpo)
-        ) {
-            return NextResponse.json(
-                { erro: "Os dados enviados são inválidos." },
-                { status: 400 }
-            );
-        }
-
-        const dados = corpo as Record<string, unknown>;
-
-        const estabelecimentoId = dados.estabelecimento_id;
-        const tipo = dados.tipo_acessibilidade;
-        const informacao = dados.informacao_proposta;
-        const nome = dados.nome_contribuidor;
-        const relato = dados.relato;
-
-        if (
-            typeof estabelecimentoId !== "number" ||
             !Number.isSafeInteger(estabelecimentoId) ||
             estabelecimentoId <= 0
         ) {
@@ -147,7 +141,6 @@ export async function POST(request: Request) {
         }
 
         if (
-            nome !== undefined &&
             nome !== null &&
             (typeof nome !== "string" || nome.trim().length > 100)
         ) {
@@ -158,7 +151,6 @@ export async function POST(request: Request) {
         }
 
         if (
-            relato !== undefined &&
             relato !== null &&
             (typeof relato !== "string" || relato.length > 5000)
         ) {
@@ -166,6 +158,41 @@ export async function POST(request: Request) {
                 { erro: "O relato deve ter no máximo 5000 caracteres." },
                 { status: 400 }
             );
+        }
+
+        let arquivo: File | null = null;
+
+        const extensoes: Record<string, string> = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+        };
+
+        if (foto !== null) {
+            if (!(foto instanceof File) || foto.size === 0) {
+                return NextResponse.json(
+                    { erro: "O arquivo enviado é inválido." },
+                    { status: 400 }
+                );
+            }
+
+            if (foto.size > 4 * 1024 * 1024) {
+                return NextResponse.json(
+                    { erro: "A fotografia deve ter no máximo 4 MB." },
+                    { status: 400 }
+                );
+            }
+
+            if (!extensoes[foto.type]) {
+                return NextResponse.json(
+                    {
+                        erro: "Formato inválido. Envie uma imagem JPEG, PNG ou WebP.",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            arquivo = foto;
         }
 
         const [estabelecimentos] = await pool.execute<Estabelecimento[]>(
@@ -180,14 +207,26 @@ export async function POST(request: Request) {
             );
         }
 
+        if (arquivo) {
+            const nomeArquivo = `contribuicoes/${randomUUID()}.${extensoes[arquivo.type]}`;
+
+            const blob = await put(nomeArquivo, arquivo, {
+                access: "public",
+                contentType: arquivo.type,
+            });
+
+            fotoUrl = blob.url;
+        }
+
         const [resultado] = await pool.execute<ResultSetHeader>(
             `INSERT INTO contribuicoes (
                 estabelecimento_id,
                 nome_contribuidor,
                 tipo_acessibilidade,
                 informacao_proposta,
-                relato
-            ) VALUES (?, ?, ?, ?, ?)`,
+                relato,
+                foto_url
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 estabelecimentoId,
                 typeof nome === "string" && nome.trim()
@@ -198,6 +237,7 @@ export async function POST(request: Request) {
                 typeof relato === "string" && relato.trim()
                     ? relato.trim()
                     : null,
+                fotoUrl,
             ]
         );
 
@@ -209,6 +249,7 @@ export async function POST(request: Request) {
                     estabelecimento_id: estabelecimentoId,
                     tipo_acessibilidade: tipo,
                     informacao_proposta: informacao,
+                    foto_url: fotoUrl,
                     status: "pendente",
                 },
             },
@@ -216,6 +257,17 @@ export async function POST(request: Request) {
         );
     } catch (error) {
         console.error("Erro ao registrar contribuição:", error);
+
+        if (fotoUrl) {
+            try {
+                await del(fotoUrl);
+            } catch (erroExclusao) {
+                console.error(
+                    "Não foi possível excluir a fotografia do Blob:",
+                    erroExclusao
+                );
+            }
+        }
 
         return NextResponse.json(
             { erro: "Não foi possível registrar a contribuição." },
