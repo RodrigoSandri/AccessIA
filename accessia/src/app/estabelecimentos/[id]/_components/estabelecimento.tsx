@@ -16,6 +16,13 @@ interface EstabelecimentoProps extends RowDataPacket {
     fonte_verificacao: string | null;
 }
 
+interface FotoContribuicao extends RowDataPacket {
+    id: number;
+    foto_url: string;
+    relato: string | null;
+    criado_em: string;
+}
+
 interface EstabelecimentoInfoProps {
     id: string;
 }
@@ -106,6 +113,7 @@ export async function EstabelecimentoInfo({
     }
 
     let estabelecimento: EstabelecimentoProps | undefined;
+    let fotografias: FotoContribuicao[] = [];
 
     try {
         const [rows] = await pool.execute<EstabelecimentoProps[]>(
@@ -142,6 +150,26 @@ export async function EstabelecimentoInfo({
                 Estabelecimento não encontrado.
             </p>
         );
+    }
+
+    try {
+        const [fotos] = await pool.execute<FotoContribuicao[]>(
+            `SELECT
+                id,
+                foto_url,
+                relato,
+                criado_em
+            FROM contribuicoes
+            WHERE estabelecimento_id = ?
+                AND status = 'aprovada'
+                AND foto_url IS NOT NULL
+            ORDER BY criado_em DESC`,
+            [idNumerico]
+        );
+
+        fotografias = fotos;
+    } catch (error) {
+        console.error("Erro ao carregar fotografias:", error);
     }
 
     return (
@@ -263,7 +291,59 @@ export async function EstabelecimentoInfo({
                     As informações apresentadas não representam,
                     por si só, uma certificação de acessibilidade.
                 </p>
-                        </section>
+            </section>
+
+            {/* Fotografias enviadas pelos usuários */}
+            <section
+                aria-labelledby="fotografias-estabelecimento"
+                className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8"
+            >
+                <h3
+                    id="fotografias-estabelecimento"
+                    className="text-xl font-bold text-zinc-900"
+                >
+                    Fotografias do estabelecimento
+                </h3>
+
+                <p className="mt-2 text-sm text-zinc-600">
+                    Imagens compartilhadas pelos usuários e aprovadas pela moderação.
+                </p>
+
+                {fotografias.length === 0 ? (
+                    <p className="mt-5 rounded-lg bg-zinc-50 p-4 text-sm text-zinc-600">
+                        Ainda não há fotografias aprovadas para este estabelecimento.
+                    </p>
+                ) : (
+                    <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        {fotografias.map((foto) => (
+                            <article
+                                key={foto.id}
+                                className="overflow-hidden rounded-lg border border-zinc-200"
+                            >
+                                <img
+                                    src={foto.foto_url}
+                                    alt={`Fotografia do estabelecimento ${estabelecimento.nome}`}
+                                    loading="lazy"
+                                    className="h-56 w-full object-cover"
+                                />
+
+                                <div className="p-4">
+                                    {foto.relato && (
+                                        <p className="whitespace-pre-line text-sm text-zinc-700">
+                                            {foto.relato}
+                                        </p>
+                                    )}
+
+                                    <p className="mt-2 text-xs text-zinc-500">
+                                        Enviada em{" "}
+                                        {new Date(foto.criado_em).toLocaleDateString("pt-BR")}
+                                    </p>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
+            </section>
 
             {/* Avaliações dos usuários */}
             <Avaliacoes estabelecimentoId={idNumerico} />

@@ -15,9 +15,7 @@ interface AvaliacoesProps {
     estabelecimentoId: number;
 }
 
-export function Avaliacoes({
-    estabelecimentoId,
-}: AvaliacoesProps) {
+export function Avaliacoes({ estabelecimentoId }: AvaliacoesProps) {
     const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
     const [nota, setNota] = useState(0);
     const [comentario, setComentario] = useState("");
@@ -37,7 +35,14 @@ export function Avaliacoes({
             }
 
             const dados: Avaliacao[] = await resposta.json();
-            setAvaliacoes(dados);
+
+            setAvaliacoes(
+                dados.sort(
+                    (a, b) =>
+                        new Date(b.criado_em).getTime() -
+                        new Date(a.criado_em).getTime()
+                )
+            );
         } catch (error) {
             console.error(error);
             setMensagem("Não foi possível carregar as avaliações.");
@@ -56,6 +61,8 @@ export function Avaliacoes({
             ? avaliacoes.reduce((total, item) => total + item.nota, 0) /
               avaliacoes.length
             : 0;
+
+    const mediaArredondada = Math.round(media);
 
     async function enviarAvaliacao(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -121,58 +128,100 @@ export function Avaliacoes({
             </h3>
 
             {carregando ? (
-                <p className="mt-4 text-zinc-600">
+                <p className="mt-4 text-sm text-zinc-600">
                     Carregando avaliações...
                 </p>
             ) : (
                 <>
-                    <div className="mt-4 rounded-lg bg-zinc-50 p-4">
+                    <div className="mt-4 rounded-lg bg-zinc-50 p-5">
                         <p className="font-semibold text-zinc-800">
                             Média das avaliações
                         </p>
 
-                        <p className="mt-1 text-lg text-zinc-700">
-                            {avaliacoes.length > 0
-                                ? `${media.toFixed(1)} de 5 estrelas`
-                                : "Este estabelecimento ainda não possui avaliações."}
-                        </p>
-
-                        <p className="text-sm text-zinc-600">
-                            {avaliacoes.length}{" "}
-                            {avaliacoes.length === 1
-                                ? "avaliação"
-                                : "avaliações"}
-                        </p>
-                    </div>
-
-                    <div className="mt-5 space-y-4">
-                        {avaliacoes.map((avaliacao) => (
-                            <article
-                                key={avaliacao.id}
-                                className="rounded-lg border border-zinc-200 p-4"
-                            >
-                                <p className="font-semibold text-zinc-800">
-                                    {"★".repeat(avaliacao.nota)}
-                                    {"☆".repeat(5 - avaliacao.nota)}
-                                    <span className="ml-2 text-sm text-zinc-600">
-                                        {avaliacao.nota}/5
+                        {avaliacoes.length > 0 ? (
+                            <>
+                                <div
+                                    className="mt-2 flex flex-wrap items-center gap-2"
+                                    aria-label={`Média de ${media.toFixed(1)} de 5 estrelas`}
+                                >
+                                    <span className="text-2xl font-bold text-zinc-900">
+                                        {media.toFixed(1)}
                                     </span>
-                                </p>
 
-                                {avaliacao.comentario && (
-                                    <p className="mt-2 whitespace-pre-line text-zinc-700">
-                                        {avaliacao.comentario}
-                                    </p>
-                                )}
+                                    <span className="text-xl tracking-wide text-yellow-500">
+                                        {"★".repeat(mediaArredondada)}
+                                        <span className="text-zinc-300">
+                                            {"☆".repeat(5 - mediaArredondada)}
+                                        </span>
+                                    </span>
 
-                                <p className="mt-2 text-xs text-zinc-500">
-                                    {new Date(
-                                        avaliacao.criado_em
-                                    ).toLocaleDateString("pt-BR")}
+                                    <span className="text-sm text-zinc-600">
+                                        de 5 estrelas
+                                    </span>
+                                </div>
+
+                                <p className="mt-1 text-sm text-zinc-600">
+                                    {avaliacoes.length}{" "}
+                                    {avaliacoes.length === 1
+                                        ? "avaliação registrada"
+                                        : "avaliações registradas"}
                                 </p>
-                            </article>
-                        ))}
+                            </>
+                        ) : (
+                            <p className="mt-2 text-sm text-zinc-600">
+                                Este estabelecimento ainda não possui
+                                avaliações. Seja o primeiro a compartilhar
+                                sua experiência!
+                            </p>
+                        )}
                     </div>
+
+                    {avaliacoes.length > 0 && (
+                        <div className="mt-6 space-y-4">
+                            <h4 className="font-semibold text-zinc-900">
+                                Relatos dos usuários
+                            </h4>
+
+                            {avaliacoes.map((avaliacao) => (
+                                <article
+                                    key={avaliacao.id}
+                                    className="rounded-lg border border-zinc-200 p-4"
+                                >
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span
+                                            className="text-xl tracking-wide text-yellow-500"
+                                            aria-label={`${avaliacao.nota} de 5 estrelas`}
+                                        >
+                                            {"★".repeat(avaliacao.nota)}
+                                            <span className="text-zinc-300">
+                                                {"☆".repeat(5 - avaliacao.nota)}
+                                            </span>
+                                        </span>
+
+                                        <span className="text-sm font-medium text-zinc-700">
+                                            {avaliacao.nota}/5
+                                        </span>
+                                    </div>
+
+                                    {avaliacao.comentario ? (
+                                        <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-700">
+                                            {avaliacao.comentario}
+                                        </p>
+                                    ) : (
+                                        <p className="mt-3 text-sm italic text-zinc-500">
+                                            Avaliação sem comentário.
+                                        </p>
+                                    )}
+
+                                    <p className="mt-3 text-xs text-zinc-500">
+                                        {new Date(
+                                            avaliacao.criado_em
+                                        ).toLocaleDateString("pt-BR")}
+                                    </p>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </>
             )}
 
@@ -181,7 +230,12 @@ export function Avaliacoes({
                     Avalie este estabelecimento
                 </h4>
 
-                <form onSubmit={enviarAvaliacao} className="mt-4 space-y-4">
+                <p className="mt-1 text-sm text-zinc-600">
+                    Sua experiência pode ajudar outras pessoas a conhecer
+                    melhor a acessibilidade deste local.
+                </p>
+
+                <form onSubmit={enviarAvaliacao} className="mt-5 space-y-4">
                     <fieldset>
                         <legend className="mb-2 font-medium text-zinc-800">
                             Sua nota
@@ -195,10 +249,10 @@ export function Avaliacoes({
                                     onClick={() => setNota(valor)}
                                     aria-label={`${valor} estrelas`}
                                     aria-pressed={nota === valor}
-                                    className={`text-3xl ${
+                                    className={`text-3xl transition ${
                                         valor <= nota
                                             ? "text-yellow-500"
-                                            : "text-zinc-300"
+                                            : "text-zinc-300 hover:text-yellow-400"
                                     }`}
                                 >
                                     ★
@@ -223,16 +277,22 @@ export function Avaliacoes({
                             }
                             maxLength={2000}
                             rows={4}
-                            className="w-full rounded-lg border border-zinc-300 p-3 text-zinc-800 focus:border-blue-500 focus:outline-none"
+                            className="w-full rounded-lg border border-zinc-300 p-3 text-zinc-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                             placeholder="Conte como foi sua experiência..."
                         />
+
+                        <p className="mt-1 text-right text-xs text-zinc-500">
+                            {comentario.length}/2000 caracteres
+                        </p>
                     </div>
 
                     {mensagem && (
                         <p
                             role="alert"
                             className={
-                                erro ? "text-red-700" : "text-green-700"
+                                erro
+                                    ? "text-sm text-red-700"
+                                    : "text-sm text-green-700"
                             }
                         >
                             {mensagem}
