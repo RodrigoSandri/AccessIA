@@ -11,6 +11,7 @@ interface Contribuicao {
     tipo_acessibilidade: string;
     informacao_proposta: string;
     relato: string | null;
+    foto_url: string | null;
     status: string;
     origem: string;
 }
@@ -284,6 +285,31 @@ export default function ModeracaoContribuicoes() {
                                     <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
                                         {contribuicao.relato}
                                     </p>
+                                </div>
+                            )}
+
+                            {contribuicao.foto_url && (
+                                <div className="mt-4">
+                                    <p className="font-semibold text-gray-700">
+                                        Fotografia enviada
+                                    </p>
+
+                                    <img
+                                        src={contribuicao.foto_url}
+                                        alt={`Fotografia enviada para ${contribuicao.estabelecimento_nome} na contribuição ${contribuicao.id}`}
+                                        loading="lazy"
+                                        className="mt-2 max-h-80 w-full rounded-lg border border-gray-200 bg-gray-50 object-contain sm:w-auto"
+                                    />
+
+                                    <a
+                                        href={contribuicao.foto_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-2 inline-flex min-h-10 items-center text-sm font-semibold text-blue-700 underline hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                                    >
+                                        Abrir fotografia em tamanho original
+                                        (nova aba)
+                                    </a>
                                 </div>
                             )}
 

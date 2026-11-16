@@ -1,7 +1,7 @@
-
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
 import { isAdmin } from "@/lib/auth";
+import { concederPontosPorContribuicaoAprovada } from "@/lib/bonificacao";
 import type {
     ResultSetHeader,
     RowDataPacket,
@@ -34,6 +34,7 @@ interface ContribuicaoAdmin extends RowDataPacket {
     tipo_acessibilidade: string;
     informacao_proposta: string;
     relato: string | null;
+    foto_url: string | null;
     status: string;
 }
 
@@ -66,6 +67,7 @@ export async function GET() {
                 c.tipo_acessibilidade,
                 c.informacao_proposta,
                 c.relato,
+                c.foto_url,
                 c.status
             FROM contribuicoes c
             INNER JOIN estabelecimentos e
@@ -404,6 +406,12 @@ export async function PATCH(request: Request) {
             WHERE id = ?`,
             [novoStatus, id]
         );
+
+        // Concede pontos somente quando a contribuição é aprovada.
+        // A concessão ocorre dentro da mesma transação da moderação.
+        if (acao === "aprovar") {
+            await concederPontosPorContribuicaoAprovada(conexao, id);
+        }
 
         await conexao.commit();
 
