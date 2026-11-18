@@ -3,8 +3,38 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import type { ResultSetHeader } from "mysql2";
 import { pool } from "@/lib/db";
+import { verificarLimiteRequisicoes } from "@/lib/limite-requisicoes";
 
 export async function POST(request: Request) {
+  const resultadoLimite = await verificarLimiteRequisicoes(
+    request,
+    "cadastro-usuarios",
+  );
+
+  if (resultadoLimite.indisponivel) {
+    return NextResponse.json(
+      { erro: "Serviço temporariamente indisponível. Tente novamente." },
+      {
+        status: 503,
+        headers: {
+          "Retry-After": String(resultadoLimite.retryAfter),
+        },
+      },
+    );
+  }
+
+  if (!resultadoLimite.permitido) {
+    return NextResponse.json(
+      { erro: "Muitas tentativas de cadastro. Tente novamente mais tarde." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(resultadoLimite.retryAfter),
+        },
+      },
+    );
+  }
+
   let body: unknown;
 
   try {
