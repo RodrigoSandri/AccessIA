@@ -1,7 +1,11 @@
-
 import Link from "next/link";
 
-export function Header() {
+import { obterUsuarioAutenticado } from "@/lib/sessao-usuario";
+import { BotaoSair } from "./botao-sair";
+
+export async function Header() {
+    const usuario = await obterUsuarioAutenticado();
+
     return (
         <header className="flex px-2 py-4 bg-zinc-900 text-white">
             <div className="flex items-center justify-between w-full mx-auto max-w-7xl">
@@ -32,6 +36,28 @@ export function Header() {
                         <li>
                             <Link href="/dashboard">Dashboard</Link>
                         </li>
+
+                        {usuario ? (
+                            <>
+                                <li className="max-w-40 truncate text-zinc-300">
+                                    Olá, {usuario.nome.split(" ")[0]}
+                                </li>
+
+                                <li>
+                                    <BotaoSair />
+                                </li>
+                            </>
+                        ) : (
+                            <>
+                                <li>
+                                    <Link href="/entrar">Entrar</Link>
+                                </li>
+
+                                <li>
+                                    <Link href="/cadastro">Cadastrar</Link>
+                                </li>
+                            </>
+                        )}
                     </ul>
                 </nav>
             </div>

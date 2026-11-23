@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 
 type Campo = "email" | "senha";
 type Valores = Record<Campo, string>;
 type Erros = Partial<Record<Campo, string>>;
-type Situacao = "inicial" | "carregando" | "sucesso" | "erro";
+type Situacao = "inicial" | "carregando" | "erro";
 
 const ORDEM_CAMPOS: Campo[] = ["email", "senha"];
 
@@ -122,16 +123,15 @@ function CampoFormulario({
 }
 
 export default function Entrar() {
+  const router = useRouter();
   const [valores, setValores] = useState<Valores>(VALORES_INICIAIS);
   const [erros, setErros] = useState<Erros>({});
   const [erroGeral, setErroGeral] = useState("");
   const [situacao, setSituacao] = useState<Situacao>("inicial");
   const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [nomeUsuario, setNomeUsuario] = useState("");
 
   const emailRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
-  const linkInicioRef = useRef<HTMLAnchorElement>(null);
 
   const referencias = {
     email: emailRef,
@@ -139,12 +139,6 @@ export default function Entrar() {
   };
 
   const carregando = situacao === "carregando";
-
-  useEffect(() => {
-    if (situacao === "sucesso") {
-      linkInicioRef.current?.focus();
-    }
-  }, [situacao]);
 
   function aoAlterar(evento: ChangeEvent<HTMLInputElement>) {
     const campo = evento.target.name as Campo;
@@ -202,18 +196,13 @@ export default function Entrar() {
         }),
       });
 
-      const dados: {
-        erro?: string;
-        usuario?: { nome?: string };
-      } | null = await resposta.json().catch(() => null);
+      const dados: { erro?: string } | null = await resposta
+        .json()
+        .catch(() => null);
 
       if (resposta.status === 200) {
-        setNomeUsuario(
-          typeof dados?.usuario?.nome === "string" ? dados.usuario.nome : "",
-        );
-        setValores(VALORES_INICIAIS);
-        setMostrarSenha(false);
-        setSituacao("sucesso");
+        router.push("/");
+        router.refresh();
         return;
       }
 
@@ -255,12 +244,7 @@ export default function Entrar() {
     }
   }
 
-  const mensagemStatus =
-    situacao === "carregando"
-      ? "Entrando..."
-      : situacao === "sucesso"
-        ? `Login realizado com sucesso${nomeUsuario ? `. Olá, ${nomeUsuario}` : ""}.`
-        : "";
+  const mensagemStatus = carregando ? "Entrando..." : "";
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-10">
@@ -276,13 +260,7 @@ export default function Entrar() {
 
         <div role="status" aria-live="polite" aria-atomic="true">
           {mensagemStatus && (
-            <p
-              className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
-                situacao === "sucesso"
-                  ? "border-green-300 bg-green-50 text-green-900"
-                  : "border-blue-200 bg-blue-50 text-blue-900"
-              }`}
-            >
+            <p className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
               {mensagemStatus}
             </p>
           )}
@@ -296,80 +274,72 @@ export default function Entrar() {
           )}
         </div>
 
-        {situacao !== "sucesso" && (
-          <form
-            className="space-y-4"
-            onSubmit={aoEnviar}
-            noValidate
-            aria-busy={carregando}
+        <form
+          className="space-y-4"
+          onSubmit={aoEnviar}
+          noValidate
+          aria-busy={carregando}
+        >
+          <CampoFormulario
+            nome="email"
+            rotulo="E-mail"
+            tipo="email"
+            placeholder="Digite seu e-mail"
+            autoComplete="username"
+            valor={valores.email}
+            erro={erros.email}
+            maxLength={255}
+            referencia={emailRef}
+            aoAlterar={aoAlterar}
+          />
+
+          <CampoFormulario
+            nome="senha"
+            rotulo="Senha"
+            tipo={mostrarSenha ? "text" : "password"}
+            placeholder="Digite sua senha"
+            autoComplete="current-password"
+            valor={valores.senha}
+            erro={erros.senha}
+            referencia={senhaRef}
+            aoAlterar={aoAlterar}
+          />
+
+          <div className="flex items-center gap-2">
+            <input
+              id="mostrar-senha"
+              type="checkbox"
+              checked={mostrarSenha}
+              onChange={(evento: ChangeEvent<HTMLInputElement>) =>
+                setMostrarSenha(evento.target.checked)
+              }
+              className="h-4 w-4 rounded border-gray-300 text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+            />
+
+            <label htmlFor="mostrar-senha" className="text-sm text-gray-700">
+              Mostrar senha
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            disabled={carregando}
+            className="w-full rounded-lg bg-blue-700 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <CampoFormulario
-              nome="email"
-              rotulo="E-mail"
-              tipo="email"
-              placeholder="Digite seu e-mail"
-              autoComplete="username"
-              valor={valores.email}
-              erro={erros.email}
-              maxLength={255}
-              referencia={emailRef}
-              aoAlterar={aoAlterar}
-            />
-
-            <CampoFormulario
-              nome="senha"
-              rotulo="Senha"
-              tipo={mostrarSenha ? "text" : "password"}
-              placeholder="Digite sua senha"
-              autoComplete="current-password"
-              valor={valores.senha}
-              erro={erros.senha}
-              referencia={senhaRef}
-              aoAlterar={aoAlterar}
-            />
-
-            <div className="flex items-center gap-2">
-              <input
-                id="mostrar-senha"
-                type="checkbox"
-                checked={mostrarSenha}
-                onChange={(evento: ChangeEvent<HTMLInputElement>) =>
-                  setMostrarSenha(evento.target.checked)
-                }
-                className="h-4 w-4 rounded border-gray-300 text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-              />
-
-              <label htmlFor="mostrar-senha" className="text-sm text-gray-700">
-                Mostrar senha
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={carregando}
-              className="w-full rounded-lg bg-blue-700 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {carregando ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
-        )}
+            {carregando ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          {situacao !== "sucesso" && (
-            <>
-              Ainda não tem conta?{" "}
-              <Link
-                href="/cadastro"
-                className="font-semibold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-              >
-                Criar conta
-              </Link>
-              <span aria-hidden="true"> · </span>
-            </>
-          )}
-
+          Ainda não tem conta?{" "}
           <Link
-            ref={linkInicioRef}
+            href="/cadastro"
+            className="font-semibold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+          >
+            Criar conta
+          </Link>
+          <span aria-hidden="true"> · </span>
+          <Link
             href="/"
             className="font-semibold text-blue-700 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
           >
