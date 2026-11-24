@@ -18,6 +18,7 @@ export default function ContribuirPage() {
     const [nome, setNome] = useState("");
     const [relato, setRelato] = useState("");
     const [foto, setFoto] = useState<File | null>(null);
+    const [chaveFoto, setChaveFoto] = useState(0);
     const [mensagem, setMensagem] = useState("");
     const [erro, setErro] = useState(false);
     const [carregando, setCarregando] = useState(false);
@@ -60,8 +61,10 @@ export default function ContribuirPage() {
         carregarEstabelecimentos();
     }, []);
 
-    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+       async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+       
+
         setMensagem("");
         setErro(false);
         setCarregando(true);
@@ -108,8 +111,9 @@ export default function ContribuirPage() {
             setNome("");
             setRelato("");
             setFoto(null);
+            setChaveFoto((atual) => atual + 1);
 
-            event.currentTarget.reset();
+          
         } catch (error) {
             console.error("Erro ao enviar contribuição:", error);
 
@@ -302,6 +306,7 @@ export default function ContribuirPage() {
 
                     <input
                         id="foto"
+                        key={chaveFoto}
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         onChange={(event) =>
